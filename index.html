@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FastFix Rescue | เรียกช่างซ่อมรถฉุกเฉิน 24 ชม. ใกล้ฉันที่สุด (รถยนต์ & มอเตอร์ไซค์ & รถลาก)</title>
+  <meta name="description" content="บริการเรียกช่างซ่อมรถเมื่อรถเสียฉุกเฉิน 24 ชม. ค้นหาร้านซ่อมรถใกล้ฉันที่สุด ทั้งรถยนต์และรถเครื่อง พร้อมบริการรถยก รถลาก รถสไลด์ พ่วงแบตเตอรี่ ปะยางนอกสถานที่">
+  
+  <!-- Google Fonts: Prompt & Kanit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Prompt:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome 6 Free Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Leaflet Map CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+  <!-- Google Identity Services SDK (Real Google Sign-In) -->
+  <meta name="google-signin-client_id" content="1059653477143-l97831c6jvl5hl3sle0epg8v94vrchkk.apps.googleusercontent.com">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ================= TOP NAVIGATION ================= -->
+  <nav class="navbar" id="topNavbar">
+    <div class="nav-container">
+      <!-- Brand Logo -->
+      <a class="brand-logo" onclick="window.scrollTo({top:0, behavior:'smooth'})">
+        <div class="logo-icon-box">
+          <i class="fa-solid fa-truck-medical"></i>
+        </div>
+        <div class="logo-text">
+          <h1>FastFix <span>Rescue</span></h1>
+          <span class="logo-subtitle">เรียกช่างซ่อมรถฉุกเฉิน 24 ชม.</span>
+        </div>
+      </a>
+
+      <!-- Location Badge Picker -->
+      <div class="nav-location" onclick="openModal('locationPickerModal')" title="คลิกเพื่อเปลี่ยนพิกัดตำแหน่งของคุณ">
+        <span class="loc-dot"></span>
+        <i class="fa-solid fa-location-dot" style="color:#FF5A1F;"></i>
+        <span id="navLocationText">สยามสแควร์ / ปทุมวัน (พิกัดจำลอง)</span>
+        <i class="fa-solid fa-chevron-down" style="font-size:0.7rem; color:#94A3B8;"></i>
+      </div>
+
+      <!-- Nav Actions: Hotlines & Auth Profile -->
+      <div class="nav-actions">
+        <a href="tel:1197" class="hotline-badge" title="โทรสายด่วนจราจร 1197">
+          <i class="fa-solid fa-phone-volume"></i> สายด่วน 1197
+        </a>
+        <div id="navAuthContainer">
+          <!-- Populated dynamically by JavaScript -->
+          <button class="btn-auth" onclick="openAuthModal('login')">
+            <i class="fa-regular fa-user"></i> เข้าสู่ระบบ / สมัครสมาชิก
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ================= ACTIVE REQUEST FLOATING BANNER ================= -->
+  <div class="active-request-banner" id="activeRequestBanner">
+    <div class="arb-container">
+      <div class="arb-info">
+        <div class="arb-spinner"></div>
+        <div>
+          <div class="arb-status-title" id="arbStatusTitle">🚨 กำลังส่งสัญญาณหาช่างที่ใกล้ที่สุด...</div>
+          <div class="arb-status-desc" id="arbStatusDesc">ประเภทยานพาหนะ: รถยนต์ • ปัญหา: ยางแบน</div>
+        </div>
+      </div>
+      <div class="arb-actions">
+        <button class="btn-arb-view" onclick="openLiveTrackerModal()">
+          <i class="fa-solid fa-satellite-dish"></i> ดูสถานะสดแบบเรียลไทม์
+        </button>
+        <button class="btn-arb-cancel" onclick="cancelActiveRequest()">ยกเลิกคำขอ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= HERO EMERGENCY SECTION ================= -->
+  <header class="hero-section">
+    <div class="hero-glow-1"></div>
+    <div class="hero-glow-2"></div>
+    
+    <div class="hero-container">
+      <!-- Left Hero Text & SOS Action -->
+      <div class="hero-content">
+        <div class="hero-tag">
+          <i class="fa-solid fa-triangle-exclamation"></i> บริการช่วยเหลือฉุกเฉินบนท้องถนน ตลอด 24 ชั่วโมง
+        </div>
+        <h2 class="hero-title">
+          รถเสียกลางทาง? <br>
+          <span class="highlight">ค้นหาช่างซ่อมใกล้ฉันที่สุด</span> ทันที
+        </h2>
+        <p class="hero-desc">
+          ไม่ว่าจะ<b>รถยนต์</b> หรือ <b>รถเครื่อง (มอเตอร์ไซค์)</b> สตาร์ทไม่ติด ยางแตก แบตเตอรี่หมด หรือต้องการ<b>รถลาก/รถสไลด์</b> 
+          ระบบจะค้นหาอู่ซ่อมและทีมช่างฉุกเฉินที่อยู่ใกล้พิกัดคุณมากที่สุด พร้อมออกปฏิบัติการใน 15 นาที
+        </p>
+
+        <div class="hero-actions">
+          <button class="btn-sos-main" onclick="startQuickSOS()">
+            <div class="sos-pulse-ring"></div>
+            <i class="fa-solid fa-bell"></i> กดปุ่มเรียกช่างด่วนฉุกเฉิน (SOS)
+          </button>
+
+          <button class="btn-locate-me" onclick="detectUserLocation()">
+            <i class="fa-solid fa-location-crosshairs"></i> ใช้พิกัดปัจจุบันของฉัน (GPS)
+          </button>
+        </div>
+
+        <div class="hero-stats">
+          <div class="stat-item">
+            <span class="stat-num">24 ชม.</span>
+            <span class="stat-lbl">พร้อมให้บริการตลอดเวลา</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-num">~12-15 นาที</span>
+            <span class="stat-lbl">ระยะเวลาเข้าถึงเฉลี่ย</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-num">100%</span>
+            <span class="stat-lbl">มีรถสไลด์ & ช่างมืออาชีพ</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Hero 3D Graphic Banner -->
+      <div class="hero-visual">
+        <div class="hero-image-wrapper">
+          <img src="assets/hero_rescue.jpg" alt="Emergency Roadside Repair Service" class="hero-banner-img">
+          
+          <div class="hero-floating-badge">
+            <div class="radar-scan-anim">
+              <i class="fa-solid fa-compass"></i>
+            </div>
+            <div class="hfb-text">
+              <h4><i class="fa-solid fa-signal" style="color:#10B981;"></i> ระบบเรดาร์ตรวจจับร้านใกล้เคียง</h4>
+              <p>ตำแหน่งของคุณ: <b id="heroCurrentLoc" style="color:#FF7A00;">สยามสแควร์ / ปทุมวัน</b></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= STICKY FILTER & SEARCH CONTROLS ================= -->
+  <section class="filter-section">
+    <div class="filter-container">
+      
+      <!-- Top Row: Search & Vehicle Filters & Towing Toggle -->
+      <div class="filter-top-row">
+        <!-- Search Box -->
+        <div class="search-box-wrapper">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="shopSearchInput" class="search-input" placeholder="ค้นหาชื่อร้าน ย่าน หรือบริการ เช่น ปะยาง, แบตเตอรี่, รถสไลด์...">
+        </div>
+
+        <!-- Vehicle Type Filter (Requirement #6: รถยนต์ หรือ รถเครื่อง) -->
+        <div class="vehicle-selector-group" title="เลือกรองรับประเภทยานพาหนะ">
+          <button class="v-btn active" data-vehicle="all">
+            <i class="fa-solid fa-layer-group"></i> ทั้งหมด
+          </button>
+          <button class="v-btn v-car" data-vehicle="car">
+            <i class="fa-solid fa-car"></i> 🚗 รถยนต์
+          </button>
+          <button class="v-btn v-bike" data-vehicle="motorcycle">
+            <i class="fa-solid fa-motorcycle"></i> 🛵 รถเครื่อง
+          </button>
+        </div>
+
+        <!-- Towing Service Quick Toggle (Requirement #6: มีรถลากมั้ย) -->
+        <button class="tow-toggle-btn" id="towToggleBtn" title="แสดงเฉพาะร้านที่มีบริการรถยกหรือรถสไลด์">
+          <i class="fa-solid fa-truck-pickup"></i> มีรถลาก / รถสไลด์ 🚚
+        </button>
+
+        <!-- View Mode Switcher -->
+        <div class="view-mode-group">
+          <button class="view-btn active" data-view="both" title="มุมมองแผนที่คู่รายการ">
+            <i class="fa-solid fa-columns"></i> ทั้งสอง
+          </button>
+          <button class="view-btn" data-view="list" title="เฉพาะรายการร้าน">
+            <i class="fa-solid fa-list"></i> รายการ
+          </button>
+          <button class="view-btn" data-view="map" title="เฉพาะแผนที่เต็มจอ">
+            <i class="fa-solid fa-map-location-dot"></i> แผนที่
+          </button>
+        </div>
+      </div>
+
+      <!-- Bottom Row: Service Category Chips & Distance Sorting -->
+      <div class="filter-bottom-row">
+        <!-- Category Filter Chips -->
+        <div class="service-chips-scroll">
+          <button class="chip-btn active" data-service="all">
+            <i class="fa-solid fa-border-all"></i> บริการทั้งหมด
+          </button>
+          <button class="chip-btn" data-service="battery">
+            <i class="fa-solid fa-car-battery" style="color:#2563EB;"></i> พ่วง/เปลี่ยนแบตเตอรี่
+          </button>
+          <button class="chip-btn" data-service="tire">
+            <i class="fa-solid fa-compact-disc" style="color:#D97706;"></i> ปะยาง/เปลี่ยนยาง
+          </button>
+          <button class="chip-btn" data-service="towing">
+            <i class="fa-solid fa-truck-pickup" style="color:#FF5A1F;"></i> รถยก/รถสไลด์
+          </button>
+          <button class="chip-btn" data-service="engine">
+            <i class="fa-solid fa-wrench" style="color:#10B981;"></i> ซ่อมเครื่องยนต์/ไดสตาร์ท
+          </button>
+          <button class="chip-btn" data-service="fuel">
+            <i class="fa-solid fa-gas-pump" style="color:#DC2626;"></i> ส่งน้ำมันฉุกเฉิน
+          </button>
+          <button class="chip-btn" data-service="lock">
+            <i class="fa-solid fa-key" style="color:#8B5CF6;"></i> ช่างกุญแจรถ
+          </button>
+        </div>
+
+        <!-- Sorting & Count (Requirement #5: ใกล้ฉันที่สุด) -->
+        <div class="sort-and-count">
+          <span id="shopCountBadge" style="font-weight:600; color:#0F172A;">พบ 8 ร้านใกล้คุณ</span>
+          <label for="sortSelect">เรียงตาม:</label>
+          <select id="sortSelect" class="sort-select">
+            <option value="distance" selected>📍 ระยะทางใกล้ฉันที่สุด</option>
+            <option value="rating">⭐ คะแนนรีวิวสูงสุด</option>
+            <option value="response">⚡ ถึงที่หมายไวที่สุด</option>
+          </select>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MAIN CONTENT: MAP + SHOP CARDS ================= -->
+  <main class="main-wrapper" id="mainWrapper">
+    
+    <!-- LEFT COLUMN: INTERACTIVE LEAFLET MAP -->
+    <div class="map-column">
+      <div class="map-header">
+        <div class="map-title">
+          <i class="fa-solid fa-map-location-dot" style="color:#FF5A1F;"></i>
+          <span>แผนที่ร้านซ่อมรอบตัวคุณ</span>
+        </div>
+        <div class="map-legend">
+          <div class="legend-item" title="พิกัดปัจจุบันของคุณ">
+            <span class="legend-dot user"></span> รถคุณ
+          </div>
+          <div class="legend-item" title="ร้านที่มีบริการรถลาก/รถสไลด์">
+            <span class="legend-dot orange"></span> มีรถลาก
+          </div>
+          <div class="legend-item" title="รองรับรถยนต์">
+            <span class="legend-dot blue"></span> รถยนต์
+          </div>
+          <div class="legend-item" title="รองรับรถเครื่อง/มอเตอร์ไซค์">
+            <span class="legend-dot purple"></span> รถเครื่อง
+          </div>
+        </div>
+      </div>
+      <!-- Leaflet Map Canvas -->
+      <div id="rescueMap"></div>
+    </div>
+
+    <!-- RIGHT COLUMN: SHOP CARDS GRID -->
+    <div class="cards-column">
+      <div class="cards-header">
+        <h3><i class="fa-solid fa-store" style="color:#FF5A1F;"></i> ร้านซ่อมรถและบริการฉุกเฉินที่แนะนำ</h3>
+        <span class="near-hint"><i class="fa-solid fa-arrow-down-short-wide"></i> เรียงจากใกล้สุดไปไกลสุด</span>
+      </div>
+
+      <!-- Container dynamically filled by JavaScript -->
+      <div id="shopsListContainer" class="shops-list-container">
+        <!-- Rendered by renderApp() in app.js -->
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ================= AUTHENTICATION MODAL (Requirement #3 & #4) ================= -->
+  <div class="modal-overlay" id="authModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="authModalTitle"><i class="fa-solid fa-user-lock" style="color:#FF5A1F;"></i> เข้าสู่ระบบ / สมัครสมาชิก</h3>
+        <button class="btn-close-modal" onclick="closeAllModals()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Tab Switcher -->
+        <div class="auth-tabs">
+          <button class="auth-tab-btn active" id="tabBtnLogin" onclick="switchAuthTab('login')">
+            <i class="fa-solid fa-arrow-right-to-bracket"></i> เข้าสู่ระบบ
+          </button>
+          <button class="auth-tab-btn" id="tabBtnRegister" onclick="switchAuthTab('register')">
+            <i class="fa-solid fa-user-plus"></i> สมัครสมาชิกใหม่
+          </button>
+        </div>
+
+        <!-- Single Official Google Sign-In Button (Real Google Connection) -->
+        <button type="button" class="btn-google-login-premium" id="btnGooglePrimary" onclick="triggerGooglePopupLogin()">
+          <svg class="google-icon-svg" viewBox="0 0 48 48">
+            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+          </svg>
+          <span id="googleBtnText">เข้าสู่ระบบด้วย Google</span>
+        </button>
+
+        <div class="auth-divider">
+          <span>หรือเข้าสู่ระบบด้วยข้อมูลของคุณ</span>
+        </div>
+
+        <!-- LOGIN FORM -->
+        <div id="loginForm">
+          <form id="loginFormElement">
+            <div class="form-group">
+              <label class="form-label">เบอร์โทรศัพท์ หรือ อีเมล</label>
+              <div class="input-with-icon">
+                <i class="fa-regular fa-envelope input-icon"></i>
+                <input type="text" id="loginEmail" class="form-input has-icon" placeholder="เช่น 0891234567 หรือ user@gmail.com" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem;">
+                <label class="form-label" style="margin-bottom:0;">รหัสผ่าน</label>
+                <a href="#" onclick="showToast('เข้าสู่ระบบด้วย Google เพื่อความสะดวกรวดเร็ว', 'info'); return false;" style="font-size:0.75rem; color:#FF5A1F; text-decoration:none;">ลืมรหัสผ่าน?</a>
+              </div>
+              <div class="input-with-icon">
+                <i class="fa-solid fa-lock input-icon"></i>
+                <input type="password" id="loginPassword" class="form-input has-icon" placeholder="กรอกรหัสผ่านของคุณ" required>
+                <i class="fa-regular fa-eye toggle-password" onclick="togglePasswordVisibility('loginPassword', this)"></i>
+              </div>
+            </div>
+            
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; font-size:0.8rem; color:#64748B;">
+              <label style="display:flex; align-items:center; gap:0.4rem; cursor:pointer;">
+                <input type="checkbox" checked style="accent-color:#FF5A1F;"> จดจำการเข้าสู่ระบบ
+              </label>
+            </div>
+
+            <button type="submit" class="btn-submit-auth">
+              <i class="fa-solid fa-arrow-right-to-bracket"></i> เข้าสู่ระบบ
+            </button>
+          </form>
+        </div>
+
+        <!-- REGISTER FORM -->
+        <div id="registerForm" style="display:none;">
+          <form id="registerFormElement">
+            <div class="form-group">
+              <label class="form-label">ชื่อ - นามสกุล</label>
+              <div class="input-with-icon">
+                <i class="fa-regular fa-user input-icon"></i>
+                <input type="text" id="regName" class="form-input has-icon" placeholder="เช่น นายสมชาย ใจดี" required>
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+              <div class="form-group">
+                <label class="form-label">เบอร์โทรศัพท์</label>
+                <div class="input-with-icon">
+                  <i class="fa-solid fa-phone input-icon"></i>
+                  <input type="tel" id="regPhone" class="form-input has-icon" placeholder="08x-xxx-xxxx" required>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">อีเมล</label>
+                <div class="input-with-icon">
+                  <i class="fa-regular fa-envelope input-icon"></i>
+                  <input type="email" id="regEmail" class="form-input has-icon" placeholder="user@gmail.com" required>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">ประเภทยานพาหนะหลักที่ใช้</label>
+              <div class="reg-vehicle-picker">
+                <label class="reg-v-card selected" id="cardRegCar" onclick="selectRegVehicle('car')">
+                  <input type="radio" name="regVehicleChoice" value="car" checked style="display:none;">
+                  <span class="rv-icon">🚗</span>
+                  <div class="rv-text">
+                    <b>รถยนต์</b>
+                    <small>เก๋ง / กระบะ / SUV</small>
+                  </div>
+                </label>
+                <label class="reg-v-card" id="cardRegBike" onclick="selectRegVehicle('motorcycle')">
+                  <input type="radio" name="regVehicleChoice" value="motorcycle" style="display:none;">
+                  <span class="rv-icon">🛵</span>
+                  <div class="rv-text">
+                    <b>รถเครื่อง</b>
+                    <small>มอเตอร์ไซค์ / บิ๊กไบค์</small>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">หมายเลขทะเบียนรถ (ทางเลือก)</label>
+              <div class="input-with-icon">
+                <i class="fa-solid fa-car-side input-icon"></i>
+                <input type="text" id="regVehiclePlate" class="form-input has-icon" placeholder="เช่น 1กข-9921 กรุงเทพมหานคร">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">ตั้งรหัสผ่าน</label>
+              <div class="input-with-icon">
+                <i class="fa-solid fa-lock input-icon"></i>
+                <input type="password" id="regPassword" class="form-input has-icon" placeholder="อย่างน้อย 6 ตัวอักษร" required>
+                <i class="fa-regular fa-eye toggle-password" onclick="togglePasswordVisibility('regPassword', this)"></i>
+              </div>
+            </div>
+
+            <button type="submit" class="btn-submit-auth" style="background:linear-gradient(135deg, #FF5A1F, #FF7A00);">
+              <i class="fa-solid fa-user-plus"></i> ยืนยันการสมัครสมาชิก
+            </button>
+          </form>
+        </div>
+
+        <div class="auth-modal-footer">
+          <i class="fa-solid fa-shield-halved" style="color:#10B981;"></i> ระบบปลอดภัยด้วย Google Identity & เข้ารหัส SSL 256-bit
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= GOOGLE ACCOUNT PICKER SIMULATOR MODAL ================= -->
+  <div class="modal-overlay" id="googlePickerModal">
+    <div class="modal-box" style="max-width:440px;">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:0.5rem;">
+          <svg class="google-icon-svg" viewBox="0 0 48 48">
+            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+          </svg>
+          <span style="font-weight:600; font-size:1.1rem; color:#202124;">ลงชื่อเข้าใช้ด้วย Google</span>
+        </div>
+        <button class="btn-close-modal" onclick="closeAllModals()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="modal-body">
+        <p style="font-size:0.85rem; color:#5f6368; margin-bottom:1rem;">
+          เลือกบัญชีเพื่อดำเนินการต่อไปยัง <b>FastFix Rescue Service</b>
+        </p>
+
+        <div class="google-account-list">
+          <div class="google-account-item" onclick="selectGoogleAccount(0)">
+            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" class="g-avatar" alt="User 1">
+            <div class="g-info">
+              <h5>ฐิตินันท์ สมชาย (Thitinan S.)</h5>
+              <p>thitinan.work@gmail.com</p>
+            </div>
+          </div>
+
+          <div class="google-account-item" onclick="selectGoogleAccount(1)">
+            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80" class="g-avatar" alt="User 2">
+            <div class="g-info">
+              <h5>สมเกียรติ ยานยนต์ (Somkiat Y.)</h5>
+              <p>somkiat.auto@gmail.com</p>
+            </div>
+          </div>
+        </div>
+
+        <p style="font-size:0.75rem; color:#70757a; margin-top:1.5rem; text-align:center;">
+          การลงชื่อเข้าใช้จะเป็นการอนุญาตให้ FastFix Rescue ใช้งานชื่อ ที่อยู่อีเมล และรูปโปรไฟล์ของคุณ
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= GOOGLE OAUTH CONFIGURATION MODAL ================= -->
+  <div class="modal-overlay" id="googleConfigModal">
+    <div class="modal-box" style="max-width:520px;">
+      <div class="modal-header">
+        <h3><i class="fa-brands fa-google" style="color:#4285F4;"></i> ตั้งค่า Google Client ID (เชื่อมต่อจริง)</h3>
+        <button class="btn-close-modal" onclick="closeAllModals()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:0.88rem; color:#475569; margin-bottom:1rem; line-height:1.5;">
+          ระบบรองรับ <b>Google Identity Services (GIS)</b> มาตรฐานสากล คุณสามารถนำ <b>Client ID</b> จาก Google Cloud Console มาเชื่อมต่อเพื่อทดสอบการล็อกอินด้วยบัญชี Google จริงได้ทันที
+        </p>
+
+        <div class="form-group">
+          <label class="form-label">Google OAuth Client ID</label>
+          <input type="text" id="inputGoogleClientId" class="form-input" value="1059653477143-l97831c6jvl5hl3sle0epg8v94vrchkk.apps.googleusercontent.com" style="font-size:0.85rem;">
+          <div id="cfgStatusText" style="font-size:0.75rem; color:#64748B; margin-top:4px;">สถานะ: กำลังตรวจสอบ Client ID...</div>
+        </div>
+
+        <div style="display:flex; gap:0.5rem; margin-bottom:1.5rem;">
+          <button class="btn-submit-auth" style="flex:1; background:#2563EB; font-size:0.9rem; padding:0.6rem;" onclick="saveGoogleClientIdConfig()">
+            <i class="fa-solid fa-floppy-disk"></i> บันทึก Client ID
+          </button>
+          <button class="btn-auth" style="border:1px solid #CBD5E1; font-size:0.85rem;" onclick="resetGoogleClientIdToDemo()">
+            <i class="fa-solid fa-rotate-left"></i> รีเซ็ต
+          </button>
+        </div>
+
+        <!-- How to get Google Client ID guide -->
+        <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:1rem; font-size:0.82rem; line-height:1.6; color:#334155;">
+          <b style="color:#0F172A; font-size:0.88rem; display:block; margin-bottom:0.4rem;">
+            <i class="fa-solid fa-book-open" style="color:#FF5A1F;"></i> วิธีขอ Google Client ID ฟรีใน 2 นาที:
+          </b>
+          <ol style="margin-left:1.2rem;">
+            <li>เปิด <a href="https://console.cloud.google.com/apis/credentials" target="_blank" style="color:#2563EB; font-weight:600;">Google Cloud Console</a> (ใช้บัญชี Gmail ทั่วไปได้ฟรี)</li>
+            <li>กด <b>Create Credentials</b> แล้วเลือก <b>OAuth client ID</b></li>
+            <li>เลือก Application type เป็น <b>Web application</b></li>
+            <li>ในช่อง <b>Authorized JavaScript origins</b> ให้ใส่: <br>
+              <code style="background:#E2E8F0; padding:2px 6px; border-radius:4px; font-weight:600; color:#0F172A;">http://localhost:8080</code>
+            </li>
+            <li>กดปุ่ม <b>Create</b> แล้วนำ <b>Client ID</b> ที่ได้มาวางในช่องด้านบน แล้วกด <b>"บันทึก Client ID"</b></li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= USER PROFILE MODAL ================= -->
+  <div class="modal-overlay" id="userProfileModal">
+    <div class="modal-box" style="max-width:420px;">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-id-card" style="color:#FF5A1F;"></i> ข้อมูลโปรไฟล์ผู้ใช้งาน</h3>
+        <button class="btn-close-modal" onclick="closeAllModals()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body" id="userProfileContent">
+        <!-- Rendered by toggleUserDropdown() in app.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= EMERGENCY SOS REQUEST MODAL ================= -->
+  <div class="modal-overlay" id="emergencyModal">
+    <div class="modal-box" style="max-width:600px;">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-triangle-exclamation" style="color:#EF4444;"></i> แบบฟอร์มเรียกช่างด่วนฉุกเฉิน</h3>
+        <button class="btn-close-modal" onclick="closeAllModals()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="modal-body">
+        <div id="targetShopNotice"></div>
+
+        <form id="emergencySOSForm">
+          <!-- Step 1: Vehicle Type Selector (Car or Motorcycle) -->
+          <div class="form-group">
+            <label class="form-label">1. ประเภทยานพาหนะที่เสีย (ระบุชัดเจนเพื่อให้ช่างเตรียมอุปกรณ์ตรงรุ่น)</label>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+              <label style="border:2px solid #DBEAFE; border-radius:10px; padding:0.75rem; display:flex; align-items:center; gap:0.6rem; cursor:pointer; background:#EFF6FF;">
+                <input type="radio" name="sosVehicleType" value="car" checked style="accent-color:#2563EB;">
+                <div>
+                  <b style="color:#1D4ED8; font-size:0.95rem;">🚗 รถยนต์</b>
+                  <div style="font-size:0.75rem; color:#64748B;">เก๋ง / กระบะ / SUV / ตู้</div>
+                </div>
+              </label>
+
+              <label style="border:2px solid #EDE9FE; border-radius:10px; padding:0.75rem; display:flex; align-items:center; gap:0.6rem; cursor:pointer; background:#F5F3FF;">
+                <input type="radio" name="sosVehicleType" value="motorcycle" style="accent-color:#8B5CF6;">
+                <div>
+                  <b style="color:#6D28D9; font-size:0.95rem;">🛵 รถเครื่อง</b>
+                  <div style="font-size:0.75rem; color:#64748B;">มอเตอร์ไซค์ / บิ๊กไบค์ / ออโต้</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Step 2: Choose Issue -->
+          <div class="form-group">
+            <label class="form-label">2. เลือกอาการหรือปัญหาที่พบ</label>
+            <div class="issue-grid" id="emergencyIssuesContainer">
+              <!-- Rendered by renderEmergencyIssueOptions() -->
+            </div>
+          </div>
+
+          <!-- Step 3: Tow Truck Option (Requirement #6: มีรถลากมั้ย) -->
+          <div class="form-group" style="background:#FEF3C7; border:1px solid #FDE68A; padding:0.85rem; border-radius:10px;">
+            <label style="display:flex; align-items:center; gap:0.6rem; cursor:pointer;">
+              <input type="checkbox" id="sosNeedTowTruck" style="width:18px; height:18px; accent-color:#D97706;">
+              <div>
+                <b style="color:#92400E; font-size:0.95rem;"><i class="fa-solid fa-truck-pickup"></i> ต้องการบริการรถลาก / รถสไลด์ฉุกเฉิน ด้วย</b>
+                <div style="font-size:0.78rem; color:#B45309;">(ติ๊กเลือกหากรถไม่สามารถขับเคลื่อนได้เลย หรือเพลาขับหลุด เพื่อให้จัดส่งรถยก/สไลด์ไปทันที)</div>
+              </div>
+            </label>
+          </div>
+
+          <!-- Step 4: Contact & Location Info -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+            <div class="form-group">
+              <label class="form-label">ชื่อผู้ติดต่อ</label>
+              <input type="text" id="sosContactName" class="form-input" placeholder="ชื่อของคุณ" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">เบอร์โทรศัพท์ที่ติดต่อได้ทันที</label>
+              <input type="tel" id="sosContactPhone" class="form-input" placeholder="08x-xxx-xxxx" required>
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+            <div class="form-group">
+              <label class="form-label">ทะเบียนรถ / ยี่ห้อ / สี</label>
+              <input type="text" id="sosVehiclePlate" class="form-input" placeholder="เช่น Honda Civic สีขาว กข-1234">
+            </div>
+            <div class="form-group">
+              <label class="form-label">จุดสังเกต / สถานที่ใกล้เคียง</label>
+              <input type="text" id="sosRemarks" class="form-input" placeholder="เช่น จอดชิดซ้ายหน้าปั๊ม ปตท.">
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" class="btn-sos-main" style="width:100%; justify-content:center; margin-top:0.75rem;">
+            <i class="fa-solid fa-truck-medical"></i> ยืนยันการส่งคำขอเรียกช่างทันที
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= LIVE TRACKER MODAL ================= -->
+  <div class="modal-overlay" id="liveTrackerModal">
+    <div class="modal-box" style="max-width:540px; background:#0F172A; color:#fff;">
+      <div class="modal-header" style="background:#0F172A; border-color:rgba(255,255,255,0.1);">
+        <h3 style="color:#fff;"><i class="fa-solid fa-satellite-dish" style="color:#10B981;"></i> ติดตามสถานะช่างซ่อมฉุกเฉิน (สด)</h3>
+        <button class="btn-close-modal" onclick="closeAllModals()" style="background:rgba(255,255,255,0.1); color:#fff;"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body" id="liveTrackerContent">
+        <!-- Rendered by updateLiveTrackerUI() in app.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= SHOP DETAILS MODAL ================= -->
+  <div class="modal-overlay" id="shopDetailModal">
+    <div class="modal-box" style="max-width:620px;">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-circle-info" style="color:#FF5A1F;"></i> รายละเอียดร้านและอัตราค่าบริการ</h3>
+        <button class="btn-close-modal" onclick="closeAllModals()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body" id="shopDetailContent">
+        <!-- Rendered by openShopDetails() in app.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= PRESET LOCATION PICKER MODAL ================= -->
+  <div class="modal-overlay" id="locationPickerModal">
+    <div class="modal-box" style="max-width:440px;">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-map-pin" style="color:#FF5A1F;"></i> เลือกตำแหน่งพิกัดของคุณ</h3>
+        <button class="btn-close-modal" onclick="closeAllModals()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:0.85rem; color:#64748B; margin-bottom:1rem;">
+          คุณสามารถใช้พิกัดจริงจาก GPS ในมือถือ/คอมพิวเตอร์ หรือเลือกย่านจุดจำลองยอดนิยมเพื่อทดสอบการคำนวณร้านใกล้ฉัน:
+        </p>
+
+        <button onclick="detectUserLocation(); closeAllModals();" class="btn-sos-main" style="width:100%; justify-content:center; font-size:0.95rem; padding:0.65rem; margin-bottom:1rem; background:linear-gradient(135deg, #2563EB, #1D4ED8);">
+          <i class="fa-solid fa-crosshairs"></i> ดึงพิกัดจริงด้วย GPS (Geolocation)
+        </button>
+
+        <div style="font-size:0.85rem; font-weight:600; color:#0F172A; margin-bottom:0.5rem;">ย่านจำลองยอดนิยม:</div>
+        <div style="display:flex; flex-direction:column; gap:0.5rem;">
+          <button class="btn-locate-me" style="color:#0F172A; border-color:#CBD5E1; text-align:left; justify-content:flex-start;" onclick="setPresetLocation(0)">
+            <i class="fa-solid fa-location-dot" style="color:#FF5A1F;"></i> สยามสแควร์ / ปทุมวัน (จุดเริ่มต้น)
+          </button>
+          <button class="btn-locate-me" style="color:#0F172A; border-color:#CBD5E1; text-align:left; justify-content:flex-start;" onclick="setPresetLocation(1)">
+            <i class="fa-solid fa-location-dot" style="color:#FF5A1F;"></i> อนุสาวรีย์ชัยสมรภูมิ
+          </button>
+          <button class="btn-locate-me" style="color:#0F172A; border-color:#CBD5E1; text-align:left; justify-content:flex-start;" onclick="setPresetLocation(2)">
+            <i class="fa-solid fa-location-dot" style="color:#FF5A1F;"></i> แยกอโศก - สุขุมวิท
+          </button>
+          <button class="btn-locate-me" style="color:#0F172A; border-color:#CBD5E1; text-align:left; justify-content:flex-start;" onclick="setPresetLocation(3)">
+            <i class="fa-solid fa-location-dot" style="color:#FF5A1F;"></i> ห้าแยกลาดพร้าว
+          </button>
+          <button class="btn-locate-me" style="color:#0F172A; border-color:#CBD5E1; text-align:left; justify-content:flex-start;" onclick="setPresetLocation(4)">
+            <i class="fa-solid fa-location-dot" style="color:#FF5A1F;"></i> สี่แยกบางนา
+          </button>
+          <button class="btn-locate-me" style="color:#0F172A; border-color:#CBD5E1; text-align:left; justify-content:flex-start;" onclick="setPresetLocation(5)">
+            <i class="fa-solid fa-location-dot" style="color:#FF5A1F;"></i> วงเวียนใหญ่ ธนบุรี
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TOAST CONTAINER ================= -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ================= FOOTER & EMERGENCY CONTACTS ================= -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-top-grid">
+        <!-- Brand Info -->
+        <div class="footer-brand">
+          <div class="brand-logo">
+            <div class="logo-icon-box">
+              <i class="fa-solid fa-truck-medical"></i>
+            </div>
+            <div class="logo-text">
+              <h2 style="font-size:1.3rem;">FastFix <span>Rescue</span></h2>
+              <span class="logo-subtitle">เครือข่ายช่วยเหลือรถเสียฉุกเฉิน 24 ชั่วโมง</span>
+            </div>
+          </div>
+          <p>
+            ระบบค้นหาช่างซ่อมรถและรถยกที่ใกล้จุดเกิดเหตุที่สุด เชื่อมต่อผู้ขับขี่ทั้งรถยนต์และรถจักรยานยนต์กับช่างผู้เชี่ยวชาญ 
+            ครอบคลุมปัญหาแบตเตอรี่ ยาง เครื่องยนต์ และงานลากจูงกู้ภัย
+          </p>
+        </div>
+
+        <!-- Emergency Hotlines in Thailand -->
+        <div class="footer-col">
+          <h4>เบอร์โทรฉุกเฉินสำคัญ</h4>
+          <div class="emergency-numbers-grid">
+            <div class="num-pill">
+              <span>ตำรวจ / เหตุด่วน</span>
+              <b>191</b>
+            </div>
+            <div class="num-pill">
+              <span>จราจรกลาง</span>
+              <b>1197</b>
+            </div>
+            <div class="num-pill">
+              <span>ทางด่วน (กทพ.)</span>
+              <b>1543</b>
+            </div>
+            <div class="num-pill">
+              <span>ตำรวจทางหลวง</span>
+              <b>1193</b>
+            </div>
+            <div class="num-pill">
+              <span>กู้ชีพฉุกเฉิน</span>
+              <b>1669</b>
+            </div>
+            <div class="num-pill">
+              <span>สายด่วน FastFix</span>
+              <b>1999</b>
+            </div>
+          </div>
+        </div>
+
+        <!-- Services -->
+        <div class="footer-col">
+          <h4>หมวดหมู่บริการ</h4>
+          <ul class="footer-list">
+            <li><a href="#" onclick="state.filters.service='battery'; renderApp(); return false;">พ่วงแบตเตอรี่ / เปลี่ยนแบตด่วน</a></li>
+            <li><a href="#" onclick="state.filters.service='tire'; renderApp(); return false;">ปะยาง / เติมลม / สลับยางอะไหล่</a></li>
+            <li><a href="#" onclick="state.filters.service='towing'; renderApp(); return false;">รถยก / รถลาก / รถสไลด์องศาต่ำ</a></li>
+            <li><a href="#" onclick="state.filters.service='engine'; renderApp(); return false;">ซ่อมเครื่องยนต์ / ความร้อนขึ้น</a></li>
+            <li><a href="#" onclick="state.filters.service='fuel'; renderApp(); return false;">ส่งน้ำมันเบนซิน/ดีเซลฉุกเฉิน</a></li>
+            <li><a href="#" onclick="state.filters.service='lock'; renderApp(); return false;">เปิดกุญแจรถยนต์ / มอเตอร์ไซค์</a></li>
+          </ul>
+        </div>
+
+        <!-- Safety Tips -->
+        <div class="footer-col">
+          <h4>ข้อควรปฏิบัติเมื่อรถเสีย</h4>
+          <ul class="footer-list" style="font-size:0.82rem; line-height:1.5;">
+            <li>1. เปิดสัญญาณไฟฉุกเฉินทันที</li>
+            <li>2. ค่อยๆ นำรถเข้าชิดขอบทางด้านซ้าย</li>
+            <li>3. วางป้ายเตือนสามเหลี่ยมสะท้อนแสงห่างจากท้ายรถ 30-50 เมตร</li>
+            <li>4. ออกมายืนในพื้นที่ปลอดภัยหลังแผงกั้นทาง</li>
+            <li>5. กดปุ่ม SOS บนเว็บไซต์เพื่อเรียกรถช่วยเหลือ</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>© 2026 FastFix Rescue (บริการช่วยเหลือฉุกเฉินเมื่อรถเสีย 24 ชม.) All Rights Reserved. ออกแบบและพัฒนาเพื่อความปลอดภัยบนท้องถนน</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Leaflet Map JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Mock Shops Data -->
+  <script src="shops-data.js"></script>
+  <!-- Main Application Logic -->
+  <script src="app.js"></script>
+</body>
+</html>
